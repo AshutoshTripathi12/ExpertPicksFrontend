@@ -11,24 +11,21 @@ import PaginationControls from '../components/PaginationControls';
 const HomePage = () => {
   const { isAuthenticated } = useAuth();
   
-  // State for the main "All Recommendations" list
+  // State for the main "Explore All Recommendations" list
   const [recommendations, setRecommendations] = useState([]);
   const [isLoadingRecs, setIsLoadingRecs] = useState(true);
   const [recsError, setRecsError] = useState('');
   
-  // State for filters
-  const [selectedGenre, setSelectedGenre] = useState('');
-  const baseGenres = ['Science Fiction', 'Fantasy', 'Tech', 'Movies', 'Books', 'Lifestyle', 'Food'];
-  const [genres, setGenres] = useState(baseGenres);
-  
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-
   // State for Pagination
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const PAGE_SIZE = 12;
+
+  // State for filters, including the local search term for this page
+  const [selectedGenre, setSelectedGenre] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
   // State for featured sections
   const [featuredExperts, setFeaturedExperts] = useState([]);
@@ -38,21 +35,24 @@ const HomePage = () => {
   const [featuredRecommendations, setFeaturedRecommendations] = useState([]);
   const [isLoadingFeaturedRecs, setIsLoadingFeaturedRecs] = useState(true);
   const [featuredRecsError, setFeaturedRecsError] = useState('');
+  
+  // --- Data Fetching Logic ---
 
-  // --- Data Fetching and Handlers (from your provided code, unchanged) ---
-
+  // Debounce search term to avoid API calls on every keystroke
   useEffect(() => {
     const handler = setTimeout(() => {
-      setCurrentPage(0);
+      setCurrentPage(0); // Reset to first page on a new search
       setDebouncedSearchTerm(searchTerm);
     }, 500);
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
+  // Reset page when genre filter changes
   useEffect(() => {
     setCurrentPage(0);
   }, [selectedGenre]);
 
+  // Fetch the main list of recommendations (paginated and filterable)
   const fetchRecommendations = useCallback(async () => {
     setIsLoadingRecs(true);
     setRecsError('');
@@ -69,64 +69,41 @@ const HomePage = () => {
       setCurrentPage(data?.number || 0);
     } catch (err) {
       setRecsError('Failed to fetch recommendations.');
-      console.error("Fetch recommendations error:", err.response?.data || err.message);
-      setRecommendations([]);
     } finally {
       setIsLoadingRecs(false);
     }
   }, [selectedGenre, debouncedSearchTerm, currentPage]);
 
+  // Fetch featured content (only runs once on mount)
+  useEffect(() => {
+    // Fetch Experts
+    getFeaturedExperts({ page: 0, size: 4 })
+      .then(data => {
+        const expertData = data?.content || (Array.isArray(data) ? data : []);
+        setFeaturedExperts(expertData);
+      })
+      .catch(() => setExpertsError('Failed to fetch featured experts.'))
+      .finally(() => setIsLoadingExperts(false));
+
+    // Fetch Recommendations
+    getFeaturedRecommendations({ page: 0, size: 4 })
+      .then(data => {
+        const recsData = data?.content || (Array.isArray(data) ? data : []);
+        setFeaturedRecommendations(recsData);
+      })
+      .catch(() => setFeaturedRecsError('Failed to fetch featured recommendations.'))
+      .finally(() => setIsLoadingFeaturedRecs(false));
+  }, []);
+
+  // Effect to trigger main recommendations fetch when dependencies change
   useEffect(() => {
     fetchRecommendations();
   }, [fetchRecommendations]);
 
-  const fetchFeaturedExperts = useCallback(async () => {
-    setIsLoadingExperts(true);
-    setExpertsError('');
-    try {
-      const data = await getFeaturedExperts({ page: 0, size: 4 }); // Using {page, size} for consistency
-      const expertData = data?.content || (Array.isArray(data) ? data : []);
-      setFeaturedExperts(expertData);
-    } catch (err) {
-      setExpertsError('Failed to fetch featured experts.');
-      setFeaturedExperts([]);
-    } finally {
-      setIsLoadingExperts(false);
-    }
-  }, []);
-
-  const fetchFeaturedRecommendations = useCallback(async () => {
-    setIsLoadingFeaturedRecs(true);
-    setFeaturedRecsError('');
-    try {
-      const data = await getFeaturedRecommendations({ page: 0, size: 4 });
-      const recsData = data?.content || (Array.isArray(data) ? data : []);
-      setFeaturedRecommendations(recsData);
-    } catch (err) {
-      setFeaturedRecsError('Failed to fetch featured recommendations.');
-      setFeaturedRecommendations([]);
-    } finally {
-      setIsLoadingFeaturedRecs(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchFeaturedExperts(); }, [fetchFeaturedExperts]);
-  useEffect(() => { fetchFeaturedRecommendations(); }, [fetchFeaturedRecommendations]);
-
-  useEffect(() => {
-    if (recommendations.length > 0 && !selectedGenre && !debouncedSearchTerm) {
-      const uniqueGenresFromRecs = [...new Set(recommendations.map(r => r.genre).filter(g => g))].sort();
-      if (uniqueGenresFromRecs.length > 0) {
-        setGenres(prevGenres => [...new Set([...baseGenres, ...uniqueGenresFromRecs])].sort());
-      }
-    } else if (!selectedGenre && !debouncedSearchTerm && recommendations.length === 0 && !isLoadingRecs) {
-      setGenres(baseGenres.sort());
-    }
-  }, [recommendations, selectedGenre, debouncedSearchTerm, isLoadingRecs]);
-
+  // --- Handlers ---
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    const element = document.getElementById('all-recommendations-section');
+    const element = document.getElementById("all-recommendations-section");
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -135,11 +112,9 @@ const HomePage = () => {
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    setDebouncedSearchTerm(searchTerm);
+    setDebouncedSearchTerm(searchTerm); // Trigger search immediately
   };
   const clearSearch = () => setSearchTerm('');
-  
-  // Reusable Section Component is removed for direct JSX implementation
 
   return (
     <div className="bg-surface min-h-screen">
@@ -147,9 +122,9 @@ const HomePage = () => {
         <HeroCarousel />
       </header>
       
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Featured Experts Section */}
-        <section className="py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* --- Featured Experts Section --- */}
+        <section className="py-10">
           <h2 className="text-3xl font-bold text-text-main mb-6 text-center">Featured Experts</h2>
           {isLoadingExperts ? (
             <p className="text-center text-text-muted">Loading experts...</p>
@@ -166,8 +141,8 @@ const HomePage = () => {
           )}
         </section>
         
-        {/* Featured Recommendations Section */}
-        <section className="py-8 mt-8">
+        {/* --- Featured Recommendations Section --- */}
+        <section className="py-10">
           <h2 className="text-3xl font-bold text-text-main mb-6 text-center">Featured Recommendations</h2>
           {isLoadingFeaturedRecs ? (
             <p className="text-center text-text-muted">Loading recommendations...</p>
@@ -184,8 +159,8 @@ const HomePage = () => {
           )}
         </section>
 
-        {/* "Explore All Recommendations" Section */}
-        <section id="all-recommendations-section" className="py-8 md:py-12 border-t border-border-color mt-8">
+        {/* --- "Explore All Recommendations" Section --- */}
+        <section id="all-recommendations-section" className="py-10 border-t border-border-color mt-8">
           <h2 className="text-3xl font-bold text-text-main mb-8 text-center">Explore All Recommendations</h2>
           
           <div className="mb-8 p-6 bg-background rounded-lg shadow-sm border border-border-color">
@@ -202,13 +177,9 @@ const HomePage = () => {
                     onChange={handleSearchChange}
                   />
                   {searchTerm && (
-                    <button type="button" onClick={clearSearch} className="px-3 py-2 border border-y border-r border-border-color bg-white text-text-muted hover:bg-gray-50 text-sm rounded-none">
-                      Clear
-                    </button>
+                    <button type="button" onClick={clearSearch} className="px-3 py-2 border border-y border-r border-border-color bg-white text-text-muted hover:bg-gray-50 text-sm rounded-none">Clear</button>
                   )}
-                  <button type="submit" className="px-4 py-2 border border-transparent text-sm font-medium rounded-r-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Search
-                  </button>
+                  <button type="submit" className="px-4 py-2 border border-transparent text-sm font-medium rounded-r-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Search</button>
                 </div>
               </form> */}
               <div>
@@ -220,7 +191,8 @@ const HomePage = () => {
                   className="block w-full pl-3 pr-10 py-2.5 text-base border-border-color focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
                 >
                   <option value="">All Genres</option>
-                  {genres.map(g => <option key={g} value={g}>{g}</option>)}
+                  {/* Assuming genres state will be populated dynamically or use a static list */}
+                  {['Science Fiction', 'Fantasy', 'Tech', 'Movies', 'Books', 'Lifestyle', 'Food'].map(g => <option key={g} value={g}>{g}</option>)}
                 </select>
               </div>
             </div>
@@ -233,9 +205,7 @@ const HomePage = () => {
               <div className="text-center py-20 text-lg text-red-600 bg-red-50 p-6 rounded-md shadow">{recsError}</div>
             ) : recommendations.length > 0 ? (
               <>
-                <p className="text-sm text-text-muted mb-6">
-                  Showing <span className="font-semibold">{recommendations.length}</span> of <span className="font-semibold">{totalElements}</span> results.
-                </p>
+                <p className="text-sm text-text-muted mb-6">Showing <span className="font-semibold">{recommendations.length}</span> of <span className="font-semibold">{totalElements}</span> total results.</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
                   {recommendations.map((rec) => (
                     <RecommendationCard key={rec.id} recommendation={rec} />
