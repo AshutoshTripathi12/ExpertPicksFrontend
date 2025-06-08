@@ -98,11 +98,29 @@ const Navbar = () => {
         </div>
       </div>
       
-      {isMobileMenuOpen && (
+   {isMobileMenuOpen && (
         <div className="md:hidden" id="mobile-menu">
-          <div className="p-4 border-y border-border-color"> <SearchBar /> </div>
+          <div className="p-4 border-y border-border-color">
+            <SearchBar />
+          </div>
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {/* Mobile menu links */}
+            <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-text-main hover:bg-surface">Home</Link>
+            {isAuthenticated ? (
+              <>
+                <Link to="/create-recommendation" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-text-main hover:bg-surface">Add New</Link>
+                <Link to="/my-recommendations" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-text-main hover:bg-surface">My Recommendations</Link>
+                <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-text-main hover:bg-surface">My Profile</Link>
+                {user?.roles?.includes('ROLE_ADMIN') && (
+                   <Link to="/admin/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-text-main hover:bg-surface">Admin Dashboard</Link>
+                )}
+                <button onClick={() => { logout(); setIsMobileMenuOpen(false); }} className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-text-main hover:bg-surface">Logout</button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-text-main hover:bg-surface">Login</Link>
+                <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-text-muted hover:text-text-main hover:bg-surface">Sign Up</Link>
+              </>
+            )}
           </div>
         </div>
       )}
