@@ -9,7 +9,7 @@ import axios from 'axios';
 // console.log('Resolved API_BASE_URL:', API_BASE_URL);
 
 //const API_BASE_URL =  'http://localhost:8080/api';
-const API_BASE_URL = 'https://realbackend-iybp.onrender.com/api';
+const API_BASE_URL = 'https://expertpicksbackend.onrender.com:8080/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
