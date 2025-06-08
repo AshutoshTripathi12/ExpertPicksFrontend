@@ -23,7 +23,11 @@
   font-size: calc(10px + 2vmin);
   color: white;
 }
-
+.flex-shrink-0 {
+  font-family: 'Your Chosen Font Name', sans-serif; /* or serif, etc. depending on the font */
+  font-size: 2rem; /* Adjust as needed */
+  font-weight: bold; /* Or other weight if available and desired */
+}
 .App-link {
   color: #61dafb;
 }

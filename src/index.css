@@ -1,16 +1,86 @@
+/* src/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+
+@layer base {
+  body {
+    @apply font-sans text-text-main bg-background; /* Uses custom theme colors from tailwind.config.js */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  html, #root {
+    height: 100%;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-gray-900; /* Or your text-text-main */
+  }
+
+  p {
+    @apply mb-4 leading-relaxed; /* Basic paragraph styling */
+  }
+
+  hr {
+    @apply border-border-color my-6; /* Using custom border color and some margin */
+  }
+
+  a {
+    @apply text-indigo-600 hover:text-indigo-500 transition-colors;
+    /* Consider using your 'primary' color for links if PapayaWhip works well for text,
+       or a different link color from your theme. For now, keeping default indigo. */
+  }
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* Subtle animated lines for backgrounds (optional) */
+/* You can apply the 'animated-lines-bg' class to a container, like the hero section wrapper */
+.animated-lines-bg {
+  position: relative;
+  overflow: hidden; /* Keep pseudo-elements contained */
+  /* You might want to set a background color here if the pseudo-elements are very subtle
+     or if the ::before/::after don't cover the whole area and it's on top of another bg */
+  /* Example: background-color: #f0f2f5; /* A very light neutral */
+}
+
+.animated-lines-bg::before,
+.animated-lines-bg::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%; /* Centering the origin of rotation */
+  min-width: 300vw; /* Make lines very wide to cover viewport during rotation */
+  min-height: 300vw; /* Make lines very tall */
+  background-color: transparent; /* Lines will be borders */
+  animation: rotateLines 40s linear infinite; /* Increased duration for slower animation */
+  z-index: 0; /* Ensure it's behind content if carousel is on top */
+  opacity: 0.5; /* General opacity for the lines container if needed */
+}
+
+.animated-lines-bg::before {
+  /* Start from top-left of the viewport for transform translate */
+  /* bottom: 15vh; Remove this, use top/left for transform origin */
+  border-radius: 45%;
+  /* Use your theme's border color with low opacity for subtlety */
+  /* Your border-color was #E5E7EB */
+  border: 1px solid rgba(229, 231, 235, 0.15); /* Example: border-color at 15% opacity */
+}
+
+.animated-lines-bg::after {
+  /* bottom: 12vh; Remove this */
+  border-radius: 40%;
+  animation-delay: -20s; /* Offset animation for the second set of lines */
+  border: 1px solid rgba(229, 231, 235, 0.1); /* Even more subtle at 10% opacity */
+}
+
+@keyframes rotateLines {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }
