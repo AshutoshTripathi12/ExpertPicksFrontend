@@ -15,6 +15,7 @@ import PublicProfilePage from './pages/PublicProfilePage';
 import RecommendationDetailPage from './pages/RecommendationDetailPage';
 import CollaborationRequestsPage from './pages/CollaborationRequestsPage';
 import { getPendingRequestCount } from './services/collaboration.service';
+import { pingBackend } from './services/health.service'; // Import the new ping service
 
 // --- Navbar Component ---
 const Navbar = () => {
@@ -150,6 +151,27 @@ const AdminRoute = ({ children }) => {
 
 // --- Main App Structure ---
 function AppContent() {
+   // --- KEEP-ALIVE LOGIC (MOVED TO THE CORRECT LOCATION) ---
+  useEffect(() => {
+    // This function pings the backend
+    const keepBackendAwake = () => {
+      pingBackend()
+        .then(data => console.log("Backend ping successful:", data.status))
+        .catch(err => console.error("Backend ping failed. Server may be asleep.", err.message));
+    };
+
+    // Ping immediately when the application loads
+    keepBackendAwake();
+
+    // Set up an interval to ping every 2.5 minutes (150000 milliseconds)
+    const intervalId = setInterval(keepBackendAwake, 150000);
+
+    // This cleanup function runs when the app is closed.
+    // It's important to clear the interval to prevent memory leaks.
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -179,6 +201,7 @@ function AppContent() {
 }
 
 function App() {
+
   return (
     <Router>
       <AuthProvider>

@@ -1,8 +1,6 @@
 // src/pages/RegistrationPage.jsx
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { register } from '../services/auth.service';
-// import { useAuth } from '../contexts/AuthContext'; // Not strictly needed here unless for conditional UI
+import { register } from '../services/auth.service'; // Import the register function
 
 const RegistrationPage = () => {
   const [formData, setFormData] = useState({
@@ -14,9 +12,6 @@ const RegistrationPage = () => {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
-  const navigate = useNavigate();
-  // const { isAuthenticated } = useAuth(); // Example if needed
 
   const { name, email, password, confirmPassword } = formData;
 
@@ -33,23 +28,36 @@ const RegistrationPage = () => {
       setError('Passwords do not match.');
       return;
     }
-    if (!formData.name.trim() || !formData.email.trim() || password.length < 8) {
-      setError('Name, valid Email, and Password (min 8 characters) are required.');
-      // More specific checks can be added for email format client-side if desired
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long.');
       return;
     }
 
     setIsLoading(true);
     try {
+      // Call the register service function
       const response = await register({ name, email, password });
+      
+      // Assuming your backend sends a success message in response.data.message
+      // and user details in response.data
       setSuccessMessage(response.data.message || 'Registration successful! Please login.');
       setFormData({ name: '', email: '', password: '', confirmPassword: '' }); // Clear form
-      
-      setTimeout(() => {
-        navigate('/login'); // Redirect to login page after successful registration
-      }, 2000); // Give user time to see success message
     } catch (err) {
-      const errorMessage = err.response?.data?.error || err.response?.data?.message || (err.response?.data && typeof err.response.data === 'object' ? Object.values(err.response.data).join('; ') : null) || 'Registration failed. Please try again.';
+      // Handle errors from the API
+      let errorMessage = 'Registration failed. Please try again.'; // Default error
+      if (err.response && err.response.data) {
+        if (typeof err.response.data === 'string') {
+             errorMessage = err.response.data;
+        } else if (err.response.data.error) { // Custom error like { "error": "User already exists" }
+             errorMessage = err.response.data.error;
+        } else if (err.response.data.message) { // General message from backend
+             errorMessage = err.response.data.message;
+        } else if (typeof err.response.data === 'object' && Object.keys(err.response.data).length > 0) { // Validation errors like { "email": "Email should be valid" }
+             errorMessage = Object.values(err.response.data).join('; ');
+        }
+      } else if (err.message) { // Network or other errors
+        errorMessage = err.message;
+      }
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -57,23 +65,18 @@ const RegistrationPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link to="/">
-            <h2 className="mt-6 mb-2 text-center text-3xl font-bold text-text-main hover:text-primary transition-colors">
-                ExpertPicks
-            </h2>
-        </Link>
-        <h3 className="mb-8 text-center text-2xl font-semibold text-text-main">
-          Create your account
-        </h3>
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Create your ExpertPicks account
+        </h2>
       </div>
 
-      <div className="w-full max-w-md">
-        <div className="bg-background py-8 px-6 shadow-xl rounded-lg sm:px-10">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow-xl sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-text-main">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                 Full Name
               </label>
               <div className="mt-1">
@@ -85,14 +88,14 @@ const RegistrationPage = () => {
                   required
                   value={name}
                   onChange={handleChange}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   disabled={isLoading}
-                  className="appearance-none block w-full px-4 py-3 border border-border-color rounded-md shadow-sm placeholder-text-muted focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-text-main">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
               </label>
               <div className="mt-1">
@@ -104,15 +107,15 @@ const RegistrationPage = () => {
                   required
                   value={email}
                   onChange={handleChange}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   disabled={isLoading}
-                  className="appearance-none block w-full px-4 py-3 border border-border-color rounded-md shadow-sm placeholder-text-muted focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-text-main">
-                Password <span className="text-xs text-text-muted">(min. 8 characters)</span>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
               </label>
               <div className="mt-1">
                 <input
@@ -123,14 +126,14 @@ const RegistrationPage = () => {
                   required
                   value={password}
                   onChange={handleChange}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   disabled={isLoading}
-                  className="appearance-none block w-full px-4 py-3 border border-border-color rounded-md shadow-sm placeholder-text-muted focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-main">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                 Confirm Password
               </label>
               <div className="mt-1">
@@ -142,21 +145,29 @@ const RegistrationPage = () => {
                   required
                   value={confirmPassword}
                   onChange={handleChange}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   disabled={isLoading}
-                  className="appearance-none block w-full px-4 py-3 border border-border-color rounded-md shadow-sm placeholder-text-muted focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
                 />
               </div>
             </div>
 
             {error && (
-              <div className="rounded-md bg-red-50 p-3 my-3">
-                <p className="text-sm font-medium text-red-700 text-center">{error}</p>
+              <div className="rounded-md bg-red-50 p-4 my-3">
+                <div className="flex">
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-red-700">{error}</p>
+                  </div>
+                </div>
               </div>
             )}
 
             {successMessage && (
-              <div className="rounded-md bg-green-50 p-3 my-3">
-                <p className="text-sm font-medium text-green-700 text-center">{successMessage}</p>
+              <div className="rounded-md bg-green-50 p-4 my-3">
+                <div className="flex">
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-green-700">{successMessage}</p>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -164,19 +175,12 @@ const RegistrationPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-semibold text-primary-text bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Creating account...' : 'Create Account'}
+                {isLoading ? 'Creating account...' : 'Create account'}
               </button>
             </div>
           </form>
-
-          <p className="mt-8 text-center text-sm text-text-muted">
-            Already have an account?{' '}
-            <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500 hover:underline">
-              Sign in
-            </Link>
-          </p>
         </div>
       </div>
     </div>

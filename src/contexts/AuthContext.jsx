@@ -1,16 +1,15 @@
 // src/contexts/AuthContext.jsx
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { getCurrentUser, login as loginService, logout as logoutService } from '../services/auth.service.js';
+import { getCurrentUser, login as loginService, logout as logoutService } from '../services/auth.service';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // Will store the user object from localStorage/login response
+  const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // To handle initial check
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for user on initial load
     const currentUser = getCurrentUser();
     if (currentUser && currentUser.token) {
       setUser(currentUser);
@@ -19,16 +18,24 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(false);
   }, []);
 
+  // --- NEW FUNCTION ---
+  // Sets the authentication state directly from data (e.g., after registration)
+  const setAuthentication = (userData) => {
+    // This function mimics what the login service does, but with data we already have.
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
+    setIsAuthenticated(true);
+  };
+
   const login = async (email, password) => {
     try {
-      const userData = await loginService({ email, password }); // userData from service includes token
-      setUser(userData);
-      setIsAuthenticated(true);
-      return userData; // Return user data for potential use in component
+      const userData = await loginService({ email, password });
+      setAuthentication(userData); // Use the new function for consistency
+      return userData;
     } catch (error) {
-      setIsAuthenticated(false);
-      setUser(null);
-      throw error; // Re-throw to be caught by the login form
+      // Clear state on failed login attempt
+      logout();
+      throw error;
     }
   };
 
@@ -36,26 +43,24 @@ export const AuthProvider = ({ children }) => {
     logoutService();
     setUser(null);
     setIsAuthenticated(false);
-    // Potentially redirect using useNavigate if useLogout hook is created
   };
 
   const value = {
     user,
     isAuthenticated,
-    isLoading, // Expose isLoading so components can wait for auth check
+    isLoading,
     login,
     logout,
-    getToken: () => user ? user.token : null // Convenience function
+    setAuthentication // Expose the new function
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!isLoading && children} 
+      {!isLoading && children}
     </AuthContext.Provider>
   );
 };
 
-// Custom hook to use the auth context
 export const useAuth = () => {
   return useContext(AuthContext);
 };
