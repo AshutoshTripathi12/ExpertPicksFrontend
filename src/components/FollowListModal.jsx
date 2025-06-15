@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { getFollowersList, getFollowingList } from '../services/user.service';
 import VerifiedBadge from './VerifiedBadge'; // Ensure this component is imported
+import { Loader } from 'lucide-react';
 
 // This is the UserRow sub-component. The logic for the badge is here.
 const UserRow = ({ user, onNavigate }) => {
@@ -93,7 +94,7 @@ const FollowListModal = ({ isOpen, onClose, userId, listType, initialUsername })
                             {listType === 'followers' ? `${initialUsername} doesn't have any followers yet.` : `${initialUsername} isn't following anyone yet.`}
                         </p>
                     )}
-                    {isLoading && <p className="text-center text-text-muted py-4">Loading...</p>}
+                    {isLoading && <Loader className="mx-auto my-4 text-indigo-600 animate-spin" size={24} />}
                     {hasMore && !isLoading && (
                         <button 
                             onClick={handleLoadMore} 

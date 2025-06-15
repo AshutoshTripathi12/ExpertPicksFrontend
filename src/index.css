@@ -1,11 +1,14 @@
 /* src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  
   body {
-    @apply font-sans text-text-main bg-background; /* Uses custom theme colors from tailwind.config.js */
+  @apply font-sans text-text-main bg-background; 
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
@@ -83,4 +86,18 @@
   100% {
     transform: translate(-50%, -50%) rotate(360deg);
   }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
 }

@@ -10,18 +10,22 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (currentUser && currentUser.token) {
-      setUser(currentUser);
-      setIsAuthenticated(true);
+    try {
+      const currentUser = getCurrentUser();
+      if (currentUser && currentUser.token) {
+        setUser(currentUser);
+        setIsAuthenticated(true);
+      }
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
-  // --- NEW FUNCTION ---
-  // Sets the authentication state directly from data (e.g., after registration)
   const setAuthentication = (userData) => {
-    // This function mimics what the login service does, but with data we already have.
+    if (!userData || !userData.token) {
+      logout();
+      return;
+    }
     localStorage.setItem("user", JSON.stringify(userData));
     setUser(userData);
     setIsAuthenticated(true);
@@ -30,10 +34,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const userData = await loginService({ email, password });
-      setAuthentication(userData); // Use the new function for consistency
+      setAuthentication(userData);
       return userData;
     } catch (error) {
-      // Clear state on failed login attempt
       logout();
       throw error;
     }
@@ -43,6 +46,18 @@ export const AuthProvider = ({ children }) => {
     logoutService();
     setUser(null);
     setIsAuthenticated(false);
+    window.location.href = '/login'; 
+  };
+
+  // --- NEW FUNCTION TO UPDATE USER DETAILS ---
+  const updateAuthUser = (updatedData) => {
+    // This function merges new data with the existing user object
+    // and updates both the state and localStorage.
+    setUser(currentUser => {
+      const newUser = { ...currentUser, ...updatedData };
+      localStorage.setItem("user", JSON.stringify(newUser));
+      return newUser;
+    });
   };
 
   const value = {
@@ -51,7 +66,8 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     login,
     logout,
-    setAuthentication // Expose the new function
+    setAuthentication,
+    updateAuthUser // Expose the new function
   };
 
   return (

@@ -7,32 +7,32 @@ export default {
   theme: {
     extend: {
       colors: {
-        'primary': '#FFEFD5',
-        'primary-hover': '#FFE4B5',
-        'primary-text': '#5D4037',
-        'secondary': '#6B7280',
-        'secondary-hover': '#4B5563',
-        'background': '#FFFFFF',
-        'surface': '#F9FAFB',
-        'text-main': '#1F2937',
-        'text-muted': '#6B7280',
-        'border-color': '#E5E7EB',
+ 'primary': '#D946EF',         // Fuchsia-500
+  'primary-hover': '#C026D3',    // Fuchsia-600
+  'primary-text': '#FFFFFF',    // White
+  'background': '#FFFBEB',     // Light Cream
+  'surface': '#FFFFFF',       // White
+  'text-main': '#44403C',      // Dark Brownish-Gray
+  'text-muted': '#78716C',    // Taupe
+  'border-color': '#E7E5E4',  // Light Stone
       },
+      // --- THIS IS THE NEW SECTION FOR FONTS ---
       fontFamily: {
         sans: [
-          'ui-sans-serif',
-          'system-ui',
-          '-apple-system',
-          'BlinkMacSystemFont',
-          '"Segoe UI"',
-          'Roboto',
-          '"Helvetica Neue"',
-          'Arial',
-          '"Noto Sans"',
-          'sans-serif',
-          '"Apple Color Emoji"',
-          '"Segoe UI Emoji"',
-          '"Segoe UI Symbol"',
+          'Inter', // Our new primary font
+          'ui-sans-serif', 
+          'system-ui', 
+          '-apple-system', 
+          'BlinkMacSystemFont', 
+          '"Segoe UI"', 
+          'Roboto', 
+          '"Helvetica Neue"', 
+          'Arial', 
+          '"Noto Sans"', 
+          'sans-serif', 
+          '"Apple Color Emoji"', 
+          '"Segoe UI Emoji"', 
+          '"Segoe UI Symbol"', 
           '"Noto Color Emoji"',
         ],
       },

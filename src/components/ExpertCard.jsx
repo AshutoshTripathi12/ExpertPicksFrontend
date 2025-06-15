@@ -11,7 +11,8 @@ const ExpertCard = ({ expert }) => {
   const placeholderAvatar = `https://avatar.iran.liara.run/username?username=${encodeURIComponent(name || 'Expert')}`;
 
   return (
-    <div className="bg-white shadow-lg rounded-xl overflow-hidden flex flex-col items-center p-6 text-center h-full transform transition-all hover:scale-105 duration-300 ease-in-out">
+    // Added transition classes to the main div
+    <div className="bg-white shadow-lg rounded-xl overflow-hidden flex flex-col items-center p-6 text-center h-full transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1">
       <Link to={`/users/${id}`} className="block mb-4">
         <img
           className="w-32 h-32 rounded-full object-cover mx-auto border-4 border-white shadow-md"
@@ -21,7 +22,6 @@ const ExpertCard = ({ expert }) => {
         />
       </Link>
       
-      {/* Container to enforce height for text content */}
       <div className="flex flex-col flex-grow">
         <div className="flex items-center justify-center space-x-1.5 mb-1 h-7">
           <h3 className="text-xl font-semibold text-gray-800 line-clamp-1">
@@ -29,15 +29,10 @@ const ExpertCard = ({ expert }) => {
           </h3>
           {isVerified && <VerifiedBadge size={5} />}
         </div>
-
         <div className="h-10 mb-2 flex items-center justify-center">
-            {expertiseDescription && (
-              <p className="text-sm text-indigo-500 font-medium line-clamp-2">{expertiseDescription}</p>
-            )}
+            {expertiseDescription && (<p className="text-sm text-indigo-500 font-medium line-clamp-2">{expertiseDescription}</p>)}
         </div>
-        <p className="text-xs text-gray-500 mb-4">
-          {followersCount !== undefined ? `${followersCount} Followers` : ''}
-        </p>
+        <p className="text-xs text-gray-500 mb-4">{followersCount !== undefined ? `${followersCount} Followers` : ''}</p>
         <Link
           to={`/users/${id}`}
           className="mt-auto w-full text-center px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75 transition-colors"

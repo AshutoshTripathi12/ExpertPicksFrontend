@@ -14,9 +14,13 @@ import EditRecommendationPage from './pages/EditRecommendationPage';
 import PublicProfilePage from './pages/PublicProfilePage';
 import RecommendationDetailPage from './pages/RecommendationDetailPage';
 import CollaborationRequestsPage from './pages/CollaborationRequestsPage';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getPendingRequestCount } from './services/collaboration.service';
 import { pingBackend } from './services/health.service'; // Import the new ping service
-
+import Footer from './components/Footer';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 // --- Navbar Component ---
 const Navbar = () => {
   const { isAuthenticated, logout, user } = useAuth();
@@ -28,27 +32,24 @@ const Navbar = () => {
   const [pendingRequestCount, setPendingRequestCount] = useState(0);
 
   // useEffect to fetch notification count when user is logged in
+ const canViewCollabRequests = user?.roles?.includes('ROLE_EXPERT_VERIFIED') || user?.roles?.includes('ROLE_BRAND_VERIFIED');
+
   useEffect(() => {
-    if (isAuthenticated) {
+    // Only fetch count if the user is eligible to see the tab
+    if (isAuthenticated && canViewCollabRequests) {
       const fetchCount = async () => {
-        try {
-          const data = await getPendingRequestCount();
-          setPendingRequestCount(data.pendingCount || 0);
-        } catch (error) {
-          console.error("Could not fetch notification count:", error);
-          setPendingRequestCount(0); // Reset on error
-        }
+        const data = await getPendingRequestCount();
+        setPendingRequestCount(data.pendingCount || 0);
       };
       
-      fetchCount(); // Fetch immediately on login
+      fetchCount();
+      const interval = setInterval(fetchCount, 60000); // Poll every minute
       
-      const interval = setInterval(fetchCount, 60000); // Poll for new notifications every minute
-      
-      return () => clearInterval(interval); // Cleanup when component unmounts or user logs out
+      return () => clearInterval(interval);
     } else {
-      setPendingRequestCount(0); // Reset count on logout
+      setPendingRequestCount(0);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, canViewCollabRequests]);
 
   return (
     <nav className="bg-background shadow-md sticky top-0 z-50">
@@ -68,15 +69,17 @@ const Navbar = () => {
                 <>
                   <Link to="/my-recommendations" className="px-3 py-2 rounded-md text-sm font-medium text-text-muted hover:text-text-main hover:bg-surface">My Recs</Link>
                   
-                  <Link to="/collaboration-requests" className="relative px-3 py-2 rounded-md text-sm font-medium text-text-muted hover:text-text-main hover:bg-surface">
-                    <span>Requests</span>
-                    {pendingRequestCount > 0 && (
-                      <span className="absolute top-1 right-1 flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                      </span>
-                    )}
-                  </Link>
+               {canViewCollabRequests && (
+                    <Link to="/collaboration-requests" className="relative px-3 py-2 rounded-md text-sm font-medium text-text-muted hover:text-text-main hover:bg-surface">
+                      <span>Requests</span>
+                      {pendingRequestCount > 0 && (
+                        <span className="absolute top-1 right-1 flex h-3 w-3">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                        </span>
+                      )}
+                    </Link>
+                  )}
 
                   <Link to="/profile" className="px-3 py-2 rounded-md text-sm font-medium text-text-muted hover:text-text-main hover:bg-surface">Profile</Link>
                   {user?.roles?.includes('ROLE_ADMIN') && ( <Link to="/admin/dashboard" className="px-3 py-2 rounded-md text-sm font-medium text-text-muted hover:text-text-main hover:bg-surface">Admin</Link> )}
@@ -151,6 +154,7 @@ const AdminRoute = ({ children }) => {
 
 // --- Main App Structure ---
 function AppContent() {
+  const location = useLocation();
    // --- KEEP-ALIVE LOGIC (MOVED TO THE CORRECT LOCATION) ---
   useEffect(() => {
     // This function pings the backend
@@ -176,8 +180,12 @@ function AppContent() {
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-grow container mx-auto mt-6 mb-6 px-4 sm:px-6 lg:px-8">
+        <AnimatePresence mode="wait">
         <Routes>
           <Route path="/" element={<HomePage />} />
+         <Route path="/about" element={<AboutPage />}/>
+           <Route path="/contact" element={<ContactPage />} /> {/* <-- ADD NEW ROUTE */}
+            <Route path="/privacy" element={<PrivacyPolicyPage />} /> {/* <-- ADD NEW ROUTE */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegistrationPage />} />
           <Route path="/users/:userId" element={<PublicProfilePage />} />
@@ -192,10 +200,9 @@ function AppContent() {
 
           <Route path="/admin/dashboard" element={ <AdminRoute> <AdminDashboardPage /> </AdminRoute> }/>
         </Routes>
+        </AnimatePresence>
       </main>
-      <footer className="bg-surface border-t border-border-color text-center p-6">
-        <p className="text-sm text-text-muted">© {new Date().getFullYear()} ExpertPicks. All rights reserved.</p>
-      </footer>
+      <Footer />
     </div>
   );
 }

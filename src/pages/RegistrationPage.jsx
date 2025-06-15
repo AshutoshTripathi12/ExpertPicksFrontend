@@ -20,7 +20,7 @@ const RegistrationPage = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+ e.preventDefault();
     setError('');
     setSuccessMessage('');
 
@@ -35,32 +35,21 @@ const RegistrationPage = () => {
 
     setIsLoading(true);
     try {
-      // Call the register service function
-      const response = await register({ name, email, password });
+      // The register service now returns the user data with token and also stores it in localStorage.
+      await register({ name, email, password });
       
-      // Assuming your backend sends a success message in response.data.message
-      // and user details in response.data
-      setSuccessMessage(response.data.message || 'Registration successful! Please login.');
-      setFormData({ name: '', email: '', password: '', confirmPassword: '' }); // Clear form
+      setSuccessMessage('Registration successful! Redirecting to homepage...');
+      
+      // Perform a full page navigation to the homepage.
+      // This forces the app to reload, and the AuthContext will initialize with the new user.
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1500); // Delay to allow user to see the success message.
+
     } catch (err) {
-      // Handle errors from the API
-      let errorMessage = 'Registration failed. Please try again.'; // Default error
-      if (err.response && err.response.data) {
-        if (typeof err.response.data === 'string') {
-             errorMessage = err.response.data;
-        } else if (err.response.data.error) { // Custom error like { "error": "User already exists" }
-             errorMessage = err.response.data.error;
-        } else if (err.response.data.message) { // General message from backend
-             errorMessage = err.response.data.message;
-        } else if (typeof err.response.data === 'object' && Object.keys(err.response.data).length > 0) { // Validation errors like { "email": "Email should be valid" }
-             errorMessage = Object.values(err.response.data).join('; ');
-        }
-      } else if (err.message) { // Network or other errors
-        errorMessage = err.message;
-      }
+      const errorMessage = err.response?.data?.error || 'Registration failed. The email might already be in use.';
       setError(errorMessage);
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Make sure loading stops on error
     }
   };
 
