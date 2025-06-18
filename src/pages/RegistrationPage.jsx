@@ -1,6 +1,7 @@
 // src/pages/RegistrationPage.jsx
 import React, { useState } from 'react';
 import { register } from '../services/auth.service'; // Import the register function
+import { Loader } from 'lucide-react';
 
 const RegistrationPage = () => {
   const [formData, setFormData] = useState({
@@ -38,7 +39,7 @@ const RegistrationPage = () => {
       // The register service now returns the user data with token and also stores it in localStorage.
       await register({ name, email, password });
       
-      setSuccessMessage('Registration successful! Redirecting to homepage...');
+      setSuccessMessage( <Loader className="mx-auto animate-spin text-indigo-600 h-10 w-10" />);
       
       // Perform a full page navigation to the homepage.
       // This forces the app to reload, and the AuthContext will initialize with the new user.
